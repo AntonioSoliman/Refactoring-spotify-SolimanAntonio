@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Raccomandazioni</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <h1>Brani Raccomandati</h1>
+    <a href="{{ url_for('spotify.recommendations') }}">Torna alla ricerca</a>
+    
+    {% if recommended_tracks %}
+    <form method="POST" action="{{ url_for('spotify.save_recommendations') if is_logged_in else url_for('spotify.recommendations') }}">
+        <p>Seleziona i brani che desideri salvare e scegli se aggiungerli a una nuova playlist o a una esistente.</p>
+        <ul>
+            {% for track in recommended_tracks %}
+            <li>
+                {% if track.image %}
+                <img src="{{ track.image }}" alt="Track Image" width="50">
+                {% endif %}
+                {{ track.name }} - {{ track.artist }}
+                {% if track.preview_url %}
+                <audio controls>
+                    <source src="{{ track.preview_url }}" type="audio/mpeg">
+                </audio>
+                {% endif %}
+                {% if is_logged_in %}
+                <input type="checkbox" name="track_uris" value="{{ track.uri }}" checked>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        
+        {% if is_logged_in %}
+        <h2>Salva i brani selezionati</h2>
+        <div>
+            <input type="radio" name="playlist_action" value="new" id="action_new" checked>
+            <label for="action_new">Nuova playlist</label>
+            <input type="text" name="new_playlist_name" placeholder="Nome playlist" required>
+        </div>
+        
+        <div>
+            <input type="radio" name="playlist_action" value="existing" id="action_existing">
+            <label for="action_existing">Playlist esistente</label>
+            <select name="playlist_id">
+                {% for playlist in get_user_playlists() %}
+                <option value="{{ playlist.id }}">{{ playlist.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <button type="submit">Salva Brani</button>
+        {% else %}
+        <p class="login-suggestion">
+            <a href="{{ url_for('spotify.spotify_login') }}">Accedi con Spotify</a> per salvare queste raccomandazioni nelle tue playlist!
+        </p>
+        {% endif %}
+    </form>
+    {% else %}
+    <p>Nessun brano raccomandato trovato.</p>
+    {% endif %}
+</body>
+</html>
