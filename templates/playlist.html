@@ -21,13 +21,19 @@
         <a href="{{ url_for('home.analisi', playlist_id=playlist_id) }}" class="button">Mostra i Grafici</a>
     
         {% for track in tracks %}
-            <li>
-                <strong>{{ track.name }}</strong> - {{ track.artist }} ({{ track.album }}, {{ track.release_year }})
-                - Durata: {{ track.duration }}
-                {% if track.cover %}
-                <img src="{{ track.cover }}" width="50" alt="Copertina album">
-                {% endif %}
-            </li>
+        {% for track in tracks %}
+        <li>
+            <strong>{{ track.name }}</strong> - {{ track.artist }} ({{ track.album }}, {{ track.release_year }})
+            - Durata: {{ track.duration }}
+            {% if track.cover %}
+            <img src="{{ track.cover }}" width="50" alt="Copertina album">
+            {% endif %}
+            
+            
+            <a href="{{ track.track_url }}" target="_blank" class="button">Ascolta su Spotify</a>
+        </li>
+    {% endfor %}
+    
         {% endfor %}
     </ul>
     {% endif %}

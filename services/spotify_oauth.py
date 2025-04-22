@@ -127,7 +127,8 @@ def get_playlist_tracks(playlist_id):
                 "genre": ", ".join(genres) if genres else "Sconosciuto",
                 "cover": cover,
                 "duration": duration,
-                "release_year": release_year
+                "release_year": release_year,
+                "track_url": track_info["external_urls"]["spotify"]
             })
 
         return tracks
