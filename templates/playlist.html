@@ -11,7 +11,6 @@
     
 </head>
 <body>
-    
     <h1>Brani della Playlist</h1>
     {% if error %}
         <p style="color: red;">{{ error }}</p>
@@ -21,22 +20,31 @@
         <a href="{{ url_for('home.analisi', playlist_id=playlist_id) }}" class="button">Mostra i Grafici</a>
     
         {% for track in tracks %}
-        {% for track in tracks %}
-        <li>
-            <strong>{{ track.name }}</strong> - {{ track.artist }} ({{ track.album }}, {{ track.release_year }})
-            - Durata: {{ track.duration }}
-            {% if track.cover %}
-            <img src="{{ track.cover }}" width="50" alt="Copertina album">
-            {% endif %}
-            
-            
-            <a href="{{ track.track_url }}" target="_blank" class="button">Ascolta su Spotify</a>
-        </li>
-    {% endfor %}
-    
+            <li>
+                <strong>{{ track.name }}</strong> - {{ track.artist }} ({{ track.album }}, {{ track.release_year }})
+                - Durata: {{ track.duration }}
+                {% if track.cover %}
+                <img src="{{ track.cover }}" width="50" alt="Copertina album">
+                {% endif %}
+                <a href="{{ track.track_url }}" target="_blank" class="button">Ascolta su Spotify</a>
+            </li>
         {% endfor %}
     </ul>
     {% endif %}
-    
+    <div class="loader-container" id="loader">
+        <div class="loader"></div>
+    </div>
+    <script>
+        document.querySelector('a[href*="analisi"]').addEventListener('click', function(e) {
+            e.preventDefault();
+            const loader = document.getElementById('loader');
+            loader.style.display = 'flex';
+            
+            // Simula un ritardo (opzionale, solo per testing)
+            setTimeout(() => {
+                window.location.href = this.href;
+            }, 100);
+        });
+    </script>
 </body>
 </html>

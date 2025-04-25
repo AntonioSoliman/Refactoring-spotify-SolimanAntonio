@@ -39,5 +39,20 @@
     {% else %}
         <p>Nessun grafico disponibile per questa playlist.</p>
     {% endif %}
+    <div class="loader-container" id="loader">
+        <div class="loader"></div>
+    </div>
+    <script>
+        document.querySelector('a[href*="analisi"]').addEventListener('click', function(e) {
+            e.preventDefault();
+            const loader = document.getElementById('loader');
+            loader.style.display = 'flex';
+            
+            // Simula un ritardo (opzionale, solo per testing)
+            setTimeout(() => {
+                window.location.href = this.href;
+            }, 100);
+        });
+    </script>
 </body>
 </html>

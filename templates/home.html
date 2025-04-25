@@ -1,127 +1,184 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
-    <title>Home</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - Spotify Analyzer</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <h1>Benvenuto, {{ username }}</h1>
-    <form method="GET" action="{{ url_for('home.home') }}">
-        <input type="text" name="query" placeholder="Cerca playlist pubbliche">
-        <button type="submit">Cerca</button>
-    </form>
+    <!-- Barra di caricamento -->
+    <div class="loader-container" id="loader">
+        <div class="loader"></div>
+        <p class="loader-text">Elaborazione in corso...</p>
+    </div>
 
-    <!-- Bottone Login Spotify (visibile solo se non autenticato) -->
-    {% if 'token_info' not in session %}
-        <button onclick="window.location.href='{{ url_for('spotify.spotify_login') }}'">Collegati a Spotify</button>
-    {% endif %}
 
-    <!-- Bottone Logout Spotify (visibile solo se autenticato) -->
-    {% if 'token_info' in session %}
-        <button onclick="window.location.href='{{ url_for('spotify.spotify_logout') }}'">Logout Spotify</button>
-    {% endif %}
+        <h1>Benvenuto, {{ username }}</h1>
 
-    <button onclick="window.location.href='{{ url_for('spotify.saved_playlists') }}'">Playlist Pubbliche Salvate</button>
+    <main class="main-content">
+        <section class="search-section">
+            <form method="GET" action="{{ url_for('home.home') }}" class="search-form">
+                <input type="text" name="query" placeholder="Cerca playlist pubbliche" class="search-input">
+                <button type="submit" class="search-button">Cerca</button>
+            </form>
+        </section>
 
-    <!-- Bottone Playlist Private (visibile solo se autenticato) -->
-    {% if 'token_info' in session %}
-        <button onclick="window.location.href='{{ url_for('spotify.private_playlists') }}'">Playlist Private di Spotify</button>
-    {% endif %}
-
-    <button onclick="window.location.href='{{ url_for('home.home') }}'">Ricarica Playlist Casuali</button>
-    <button onclick="window.location.href='{{ url_for('auth.logout') }}'">Logout</button>
-
-    <h2>Risultati della Ricerca</h2>
-    <ul>
-        {% for playlist in playlists %}
-            <li>
-                {% if playlist.image %}
-                <img src="{{ playlist.image }}" alt="Playlist Image" width="50">
-                {% endif %}
-                <a href="{{ url_for('spotify.playlist', playlist_id=playlist.id) }}">{{ playlist.name }}</a> - {{ playlist.owner }}
-                <button class="playlist-button" 
-                        onclick="togglePlaylistSelection('{{ playlist.id }}', '{{ playlist.name }}', '{{ playlist.owner }}', '{{ playlist.image }}')">
-                    Seleziona per confronto
+        <section class="button-group">
+            <!-- Spotify Login/Logout -->
+            {% if 'token_info' not in session %}
+                <button class="spotify-btn login" onclick="window.location.href='{{ url_for('spotify.spotify_login') }}'">
+                    Collegati a Spotify
                 </button>
-                <form method="POST" action="{{ url_for('spotify.save_playlist') }}" style="display:inline;">
-                    <input type="hidden" name="playlist_id" value="{{ playlist.id }}">
-                    <input type="hidden" name="playlist_name" value="{{ playlist.name }}">
-                    <input type="hidden" name="playlist_owner" value="{{ playlist.owner }}">
-                    <input type="hidden" name="playlist_image" value="{{ playlist.image }}">
-                    <button type="submit">Salva Playlist</button>
-                </form>
-            </li>
-        {% endfor %}
-    </ul>
-    <!-- Aggiungi questo alla fine del file home.html -->
-<div id="comparison-section" style="display: none;">
-    <h2>Playlist selezionate per il confronto</h2>
-    <div id="selected-playlists"></div>
-    <button id="compare-button" onclick="comparePlaylists()">Confronta Playlist</button>
-    <button onclick="clearSelection()">Annulla selezione</button>
-</div>
+            {% else %}
+                <button class="spotify-btn logout" onclick="window.location.href='{{ url_for('spotify.spotify_logout') }}'">
+                    Logout Spotify
+                </button>
+            {% endif %}
 
-<script>
-    let selectedPlaylists = [];
-    const maxSelection = 2;
+            <!-- Navigation Buttons -->
+            <button class="nav-btn" onclick="window.location.href='{{ url_for('spotify.saved_playlists') }}'">
+                Playlist Salvate
+            </button>
 
-    function togglePlaylistSelection(playlistId, playlistName, playlistOwner, playlistImage) {
-        const index = selectedPlaylists.findIndex(p => p.id === playlistId);
-        
-        if (index === -1) {
-            if (selectedPlaylists.length >= maxSelection) {
-                alert(`Puoi selezionare al massimo ${maxSelection} playlist per il confronto.`);
-                return;
-            }
-            selectedPlaylists.push({
-                id: playlistId,
-                name: playlistName,
-                owner: playlistOwner,
-                image: playlistImage
-            });
-        } else {
-            selectedPlaylists.splice(index, 1);
-        }
+            {% if 'token_info' in session %}
+                <button class="nav-btn" onclick="window.location.href='{{ url_for('spotify.private_playlists') }}'">
+                    Playlist Private
+                </button>
+            {% endif %}
 
-        updateSelectionUI();
-    }
+            <button class="nav-btn refresh" onclick="window.location.href='{{ url_for('home.home') }}'">
+                Ricarica Playlist
+            </button>
 
-    function updateSelectionUI() {
-        const comparisonSection = document.getElementById('comparison-section');
-        const selectedDiv = document.getElementById('selected-playlists');
-        const compareButton = document.getElementById('compare-button');
-        
-        if (selectedPlaylists.length > 0) {
-            comparisonSection.style.display = 'block';
-            selectedDiv.innerHTML = selectedPlaylists.map(p => 
-                `<div class="selected-playlist">
-                    <img src="${p.image || ''}" width="30">
-                    ${p.name} - ${p.owner}
-                </div>`
-            ).join('');
+            <button class="logout-btn" onclick="window.location.href='{{ url_for('auth.logout') }}'">
+                Logout
+            </button>
+        </section>
+
+        <section class="playlists-section">
+            <h2>Risultati della Ricerca</h2>
+            <ul class="playlist-list">
+                {% for playlist in playlists %}
+                    <li class="playlist-item">
+                        {% if playlist.image %}
+                        <img src="{{ playlist.image }}" alt="Copertina playlist {{ playlist.name }}" class="playlist-image">
+                        {% endif %}
+                        
+                        <div class="playlist-info">
+                            <a href="{{ url_for('spotify.playlist', playlist_id=playlist.id) }}" class="playlist-link">
+                                {{ playlist.name }} - {{ playlist.owner }}
+                            </a>
+                            
+                            <div class="playlist-actions">
+                                <button class="action-btn select-btn" 
+                                        onclick="togglePlaylistSelection('{{ playlist.id }}', '{{ playlist.name }}', '{{ playlist.owner }}', '{{ playlist.image }}')">
+                                    Seleziona
+                                </button>
+                                
+                                <form method="POST" action="{{ url_for('spotify.save_playlist') }}" class="save-form">
+                                    <input type="hidden" name="playlist_id" value="{{ playlist.id }}">
+                                    <input type="hidden" name="playlist_name" value="{{ playlist.name }}">
+                                    <input type="hidden" name="playlist_owner" value="{{ playlist.owner }}">
+                                    <input type="hidden" name="playlist_image" value="{{ playlist.image }}">
+                                    <button type="submit" class="action-btn save-btn">Salva</button>
+                                </form>
+                            </div>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </section>
+
+        <!-- Comparison Section -->
+        <section id="comparison-section" class="comparison-section" style="display: none;">
+            <h2>Playlist selezionate per il confronto</h2>
+            <div id="selected-playlists" class="selected-playlists"></div>
+            <div class="comparison-actions">
+                <button id="compare-button" class="compare-btn" onclick="comparePlaylists()" disabled>
+                    Confronta Playlist
+                </button>
+                <button onclick="clearSelection()" class="cancel-btn">
+                    Annulla selezione
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Gestione selezione playlist
+        let selectedPlaylists = [];
+        const maxSelection = 2;
+
+        function togglePlaylistSelection(playlistId, playlistName, playlistOwner, playlistImage) {
+            const index = selectedPlaylists.findIndex(p => p.id === playlistId);
+            const button = event.currentTarget;
             
-            compareButton.disabled = selectedPlaylists.length !== 2;
-        } else {
-            comparisonSection.style.display = 'none';
-        }
-    }
+            if (index === -1) {
+                if (selectedPlaylists.length >= maxSelection) {
+                    alert(`Puoi selezionare al massimo ${maxSelection} playlist per il confronto.`);
+                    return;
+                }
+                selectedPlaylists.push({
+                    id: playlistId,
+                    name: playlistName,
+                    owner: playlistOwner,
+                    image: playlistImage
+                });
+                button.classList.add('selected');
+            } else {
+                selectedPlaylists.splice(index, 1);
+                button.classList.remove('selected');
+            }
 
-    function comparePlaylists() {
-        if (selectedPlaylists.length === 2) {
-            const playlist1 = selectedPlaylists[0].id;
-            const playlist2 = selectedPlaylists[1].id;
-            window.location.href = `/compare/${playlist1}/${playlist2}`;
+            updateSelectionUI();
         }
-    }
 
-    function clearSelection() {
-        selectedPlaylists = [];
-        updateSelectionUI();
-        // Rimuovi gli stili dai bottoni selezionati
-        document.querySelectorAll('.playlist-button.selected').forEach(btn => {
-            btn.classList.remove('selected');
-        });
-    }
-</script>
+        function updateSelectionUI() {
+            const comparisonSection = document.getElementById('comparison-section');
+            const selectedDiv = document.getElementById('selected-playlists');
+            const compareButton = document.getElementById('compare-button');
+            
+            if (selectedPlaylists.length > 0) {
+                comparisonSection.style.display = 'block';
+                selectedDiv.innerHTML = selectedPlaylists.map(p => `
+                    <div class="selected-item">
+                        ${p.image ? `<img src="${p.image}" alt="${p.name}" class="selected-image">` : ''}
+                        <span class="selected-name">${p.name}</span>
+                        <span class="selected-owner">${p.owner}</span>
+                    </div>
+                `).join('');
+                
+                compareButton.disabled = selectedPlaylists.length !== 2;
+            } else {
+                comparisonSection.style.display = 'none';
+            }
+        }
+
+        function comparePlaylists() {
+            if (selectedPlaylists.length === 2) {
+                const loader = document.getElementById('loader');
+                const compareButton = document.getElementById('compare-button');
+                
+                // Mostra loader e disabilita pulsante
+                loader.style.display = 'flex';
+                compareButton.disabled = true;
+                compareButton.textContent = 'Elaborazione...';
+                
+                // Reindirizza dopo breve ritardo
+                setTimeout(() => {
+                    window.location.href = `/compare/${selectedPlaylists[0].id}/${selectedPlaylists[1].id}`;
+                }, 150);
+            }
+        }
+
+        function clearSelection() {
+            selectedPlaylists = [];
+            updateSelectionUI();
+            document.querySelectorAll('.select-btn.selected').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+        }
+    </script>
 </body>
 </html>
