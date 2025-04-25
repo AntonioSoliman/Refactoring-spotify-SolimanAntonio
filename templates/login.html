@@ -1,17 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Titolo della pagina di login -->
     <title>Login</title>
+
+    <!-- Collegamento al foglio di stile CSS per la pagina -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+    <!-- Intestazione della pagina di login -->
     <h1>Login</h1>
+
+    <!-- Form di login -->
     <form method="POST">
+        <!-- Campo di input per l'username (richiesto per il login) -->
         <input type="text" name="username" placeholder="Username" required>
+
+        <!-- Campo di input per la password (richiesto per il login) -->
         <input type="password" name="password" placeholder="Password" required>
+
+        <!-- Pulsante per inviare il form -->
         <button type="submit">Login</button>
     </form>
+
+    <!-- Link per la registrazione nel caso l'utente non abbia un account -->
     <p>Non hai un account? <a href="{{ url_for('auth.register') }}">Registrati qui</a></p>
+
+    <!-- Se c'è un errore (es. credenziali sbagliate), mostra un messaggio in rosso -->
     {% if error %}
         <p style="color: red;">{{ error }}</p>
     {% endif %}

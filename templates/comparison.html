@@ -1,36 +1,57 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
+    <!-- Impostazione della codifica dei caratteri per supportare caratteri speciali -->
     <meta charset="UTF-8">
+    
+    <!-- Impostazione per la visualizzazione corretta su dispositivi mobili -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Titolo della pagina che indica la comparazione tra due playlist -->
     <title>Comparazione Playlist</title>
+
+    <!-- Collegamento al foglio di stile CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- Inclusione della libreria Plotly per generare i grafici interattivi -->
     <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
 </head>
 <body>
+    <!-- Intestazione che mostra il titolo della comparazione tra le due playlist -->
     <h1>Comparazione tra {{ playlist1_name }} e {{ playlist2_name }}</h1>
+
+    <!-- Link per tornare alla Home -->
     <a href="{{ url_for('home.home') }}" class="button">Torna alla Home</a>
     
+    <!-- Contenitore principale per la comparazione delle playlist -->
     <div class="comparison-container">
+
+        <!-- Sezione per i brani in comune tra le due playlist, con la percentuale di somiglianza -->
         <h2>Brani in comune - Somiglianza: {{ charts.similarity|round(1) }}%</h2>
         <div id="fig_tracks">{{ charts.fig_tracks|safe }}</div>
         
+        <!-- Sezione per gli artisti in comune, visibile solo se è presente il grafico -->
         {% if charts.fig_artists %}
             <h2>Artisti in comune</h2>
             <div id="fig_artists">{{ charts.fig_artists|safe }}</div>
         {% endif %}
-        
+
+        <!-- Sezione per il confronto della popolarità media tra le due playlist -->
         <h2>Confronto popolarità media</h2>
         <div id="fig_popularity">{{ charts.fig_popularity|safe }}</div>
         
+        <!-- Sezione per la distribuzione dei generi musicali, visibile solo se è presente il grafico -->
         {% if charts.fig_genres %}
             <h2>Distribuzione dei generi musicali</h2>
             <div id="fig_genres">{{ charts.fig_genres|safe }}</div>
         {% endif %}
-        
+
+        <!-- Sezione per la distribuzione temporale dei brani -->
         <h2>Distribuzione temporale dei brani</h2>
         <div id="fig_years">{{ charts.fig_years|safe }}</div>
     </div>
+
+    <!-- Contenitore per il loader (indicatore di caricamento), che appare durante il caricamento dei dati -->
     <div class="loader-container" id="loader">
         <div class="loader"></div>
     </div>

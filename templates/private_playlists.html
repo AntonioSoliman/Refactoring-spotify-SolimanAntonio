@@ -1,30 +1,39 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
+    <!-- Impostazione della codifica del carattere e della visualizzazione per dispositivi mobili -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Titolo della pagina che appare nella scheda del browser -->
     <title>Playlist Private di Spotify</title>
+
+    <!-- Collegamento al foglio di stile CSS per la pagina -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <!-- Barra di caricamento -->
+    <!-- Barra di caricamento che appare durante il confronto -->
     <div class="loader-container" id="loader">
         <div class="loader"></div>
         <p class="loader-text">Preparazione del confronto...</p>
     </div>
 
-        <h1>Playlist Private di Spotify</h1>
-        <a href="{{ url_for('home.home') }}" class="home-link">Torna alla Home</a>
+    <!-- Titolo della pagina e link per tornare alla home -->
+    <h1>Playlist Private di Spotify</h1>
+    <a href="{{ url_for('home.home') }}" class="home-link">Torna alla Home</a>
 
     <main class="playlist-container">
+        <!-- Elenco delle playlist private -->
         <ul class="playlist-grid">
             {% for playlist in playlists %}
                 <li class="playlist-card">
+                    <!-- Mostra l'immagine della playlist, se presente -->
                     {% if playlist.image %}
                     <img src="{{ playlist.image }}" alt="Copertina {{ playlist.name }}" class="playlist-cover">
                     {% endif %}
                     
                     <div class="playlist-details">
+                        <!-- Nome della playlist con link alla pagina della playlist -->
                         <h3 class="playlist-title">
                             <a href="{{ url_for('spotify.playlist', playlist_id=playlist.id) }}" class="playlist-link">
                                 {{ playlist.name }}
@@ -32,6 +41,7 @@
                         </h3>
                         <p class="playlist-owner">{{ playlist.owner }}</p>
                         
+                        <!-- Bottone per selezionare la playlist per il confronto -->
                         <button class="select-btn" 
                                 onclick="togglePlaylistSelection(event, '{{ playlist.id }}', '{{ playlist.name }}', '{{ playlist.owner }}', '{{ playlist.image }}')">
                             <span class="btn-icon">+</span> Seleziona
@@ -42,38 +52,44 @@
         </ul>
     </main>
 
-    <!-- Sezione confronto -->
+    <!-- Sezione per il confronto delle playlist selezionate -->
     <section id="comparison-section" class="comparison-panel">
         <div class="comparison-header">
             <h2>Playlist selezionate</h2>
             <div class="comparison-actions">
+                <!-- Bottone per avviare il confronto, disabilitato finché non sono selezionate due playlist -->
                 <button id="compare-button" class="compare-btn" disabled>
                     <span class="btn-icon">⇄</span> Confronta (2/2)
                 </button>
+                <!-- Bottone per annullare la selezione -->
                 <button onclick="clearSelection()" class="cancel-btn">
                     <span class="btn-icon">×</span> Annulla
                 </button>
             </div>
         </div>
         
+        <!-- Area dove vengono mostrate le playlist selezionate -->
         <div id="selected-playlists" class="selected-items"></div>
     </section>
 
     <script>
-        // Gestione selezione playlist
+        // Array per memorizzare le playlist selezionate
         let selectedPlaylists = [];
-        const maxSelection = 2;
+        const maxSelection = 2;  // Limite massimo di playlist selezionabili
 
+        // Funzione per gestire la selezione/deselezione delle playlist
         function togglePlaylistSelection(event, playlistId, playlistName, playlistOwner, playlistImage) {
             const button = event.currentTarget;
             const index = selectedPlaylists.findIndex(p => p.id === playlistId);
             
             if (index === -1) {
+                // Se la playlist non è ancora selezionata e il numero massimo di selezioni non è stato raggiunto
                 if (selectedPlaylists.length >= maxSelection) {
                     alert(`Puoi selezionare al massimo ${maxSelection} playlist per il confronto.`);
                     return;
                 }
                 
+                // Aggiungi la playlist alla selezione
                 selectedPlaylists.push({
                     id: playlistId,
                     name: playlistName,
@@ -81,24 +97,28 @@
                     image: playlistImage
                 });
                 
+                // Modifica il bottone per indicare che la playlist è selezionata
                 button.classList.add('selected');
                 button.innerHTML = '<span class="btn-icon">✓</span> Selezionata';
             } else {
+                // Se la playlist è già selezionata, rimuovila dalla selezione
                 selectedPlaylists.splice(index, 1);
                 button.classList.remove('selected');
                 button.innerHTML = '<span class="btn-icon">+</span> Seleziona';
             }
 
+            // Aggiorna l'interfaccia utente dopo ogni selezione/deselezione
             updateSelectionUI();
         }
 
+        // Funzione per aggiornare l'interfaccia utente in base alla selezione delle playlist
         function updateSelectionUI() {
             const comparisonSection = document.getElementById('comparison-section');
             const selectedDiv = document.getElementById('selected-playlists');
             const compareButton = document.getElementById('compare-button');
             
             if (selectedPlaylists.length > 0) {
-                comparisonSection.style.display = 'block';
+                comparisonSection.style.display = 'block';  // Mostra la sezione di confronto
                 selectedDiv.innerHTML = selectedPlaylists.map(p => `
                     <div class="selected-item">
                         ${p.image ? `<img src="${p.image}" alt="${p.name}" class="selected-cover">` : ''}
@@ -109,44 +129,48 @@
                     </div>
                 `).join('');
                 
+                // Abilita il bottone di confronto solo quando sono selezionate due playlist
                 compareButton.disabled = selectedPlaylists.length !== 2;
                 compareButton.innerHTML = `<span class="btn-icon">⇄</span> Confronta (${selectedPlaylists.length}/${maxSelection})`;
             } else {
-                comparisonSection.style.display = 'none';
+                comparisonSection.style.display = 'none';  // Nasconde la sezione di confronto se nessuna playlist è selezionata
             }
         }
 
+        // Funzione per avviare il confronto tra le due playlist selezionate
         function comparePlaylists() {
             if (selectedPlaylists.length === 2) {
                 const loader = document.getElementById('loader');
                 const compareButton = document.getElementById('compare-button');
                 
-                // Mostra loader e aggiorna stato pulsante
+                // Mostra il loader e disabilita il bottone di confronto
                 loader.style.display = 'flex';
                 compareButton.disabled = true;
                 compareButton.innerHTML = '<span class="btn-icon">⏳</span> Elaborazione...';
                 
-                // Reindirizza dopo breve ritardo
+                // Reindirizza alla pagina di confronto dopo breve ritardo
                 setTimeout(() => {
                     window.location.href = `/compare/${selectedPlaylists[0].id}/${selectedPlaylists[1].id}`;
                 }, 150);
             }
         }
 
+        // Funzione per annullare la selezione delle playlist
         function clearSelection() {
-            // Resetta tutte le selezioni
+            // Resetta la lista delle playlist selezionate
             selectedPlaylists = [];
             
-            // Ripristina tutti i pulsanti
+            // Ripristina i bottoni di selezione
             document.querySelectorAll('.select-btn').forEach(btn => {
                 btn.classList.remove('selected');
                 btn.innerHTML = '<span class="btn-icon">+</span> Seleziona';
             });
             
+            // Rimuove la visualizzazione delle playlist selezionate
             updateSelectionUI();
         }
 
-        // Inizializza il pulsante di confronto
+        // Aggiungi un listener al bottone di confronto per avviare il confronto
         document.getElementById('compare-button').addEventListener('click', comparePlaylists);
     </script>
 </body>

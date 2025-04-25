@@ -1,20 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Impostazione della codifica dei caratteri per supportare caratteri speciali -->
     <meta charset="UTF-8">
+    
+    <!-- Impostazione per la visualizzazione corretta su dispositivi mobili -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Titolo della pagina, che può essere modificato nelle pagine derivate tramite il blocco "title" -->
     <title>{% block title %}Spotify App{% endblock %}</title>
+
+    <!-- Collegamento al foglio di stile CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+    <!-- Intestazione della pagina con il titolo e la navigazione -->
     <header>
         <h1>Spotify App</h1>
         <nav>
+            <!-- Link alla Home, che punta alla route 'home.home' -->
             <a href="{{ url_for('home.home') }}">Home</a>
+            
+            <!-- Link per il logout, che punta alla route 'auth.logout' -->
             <a href="{{ url_for('auth.logout') }}">Logout</a>
         </nav>
     </header>
+
+    <!-- Corpo principale della pagina dove i contenuti specifici delle altre pagine saranno inseriti -->
     <main>
+        <!-- Blocco che permette di inserire contenuti dinamici, personalizzabili per ogni pagina -->
         {% block content %}{% endblock %}
     </main>
 </body>

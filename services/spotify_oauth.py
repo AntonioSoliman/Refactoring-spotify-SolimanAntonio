@@ -1,3 +1,4 @@
+
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth, SpotifyClientCredentials
 from flask import session, redirect, url_for, request, render_template
@@ -9,9 +10,10 @@ SPOTIFY_CLIENT_SECRET = "3a61d65da5914d1789080bccbc68e0fd"
 SPOTIFY_REDIRECT_URI = "https://super-engine-pjrq5q4674prf7r99-5000.app.github.dev/callback"
 SCOPE = "user-read-private playlist-read-private playlist-read-collaborative"
 
-
+# Setup logging
 logging.basicConfig(level=logging.INFO)
 
+# Inizializza autenticazione OAuth
 def get_spotify_auth():
     return SpotifyOAuth(
         client_id=SPOTIFY_CLIENT_ID,
@@ -21,24 +23,28 @@ def get_spotify_auth():
         show_dialog=True
     )
 
+# Ottieni client Spotify autenticato
 def get_spotify_client():
     token_info = session.get("token_info")
     if token_info:
         auth_manager = get_spotify_auth()
+        # Controlla se il token è scaduto
         if auth_manager.is_token_expired(token_info):
             logging.info("Token scaduto, aggiornamento in corso...")
             token_info = auth_manager.refresh_access_token(token_info["refresh_token"])
             session["token_info"] = token_info
         return spotipy.Spotify(auth=token_info.get("access_token"))
+    
+    # Se l'utente non è loggato, usa autenticazione base
     return spotipy.Spotify(auth_manager=SpotifyClientCredentials(
         client_id=SPOTIFY_CLIENT_ID,
         client_secret=SPOTIFY_CLIENT_SECRET
     ))
 
+# Ricerca e restituisce playlist casuali pubbliche
 def get_random_playlists():
     sp = get_spotify_client()
-    query = "music"
-    results = sp.search(q=query, type="playlist", limit=50)
+    results = sp.search(q="music", type="playlist", limit=50)
     playlists = results.get("playlists", {}).get("items", [])
     
     valid_playlists = []
@@ -47,7 +53,7 @@ def get_random_playlists():
             try:
                 valid_playlists.append({
                     "id": playlist.get("id"),
-                    "name": playlist.get("name", "Senza titolo"),  
+                    "name": playlist.get("name", "Senza titolo"),
                     "owner": playlist.get("owner", {}).get("display_name", "Sconosciuto"),
                     "url": playlist.get("external_urls", {}).get("spotify", "#"),
                     "image": playlist["images"][0]["url"] if playlist.get("images") else None
@@ -57,6 +63,8 @@ def get_random_playlists():
     
     logging.info(f"Playlist trovate: {valid_playlists}")
     return random.sample(valid_playlists, min(5, len(valid_playlists))) if valid_playlists else []
+
+# Ricerca playlist in base a una query
 def search_playlists(query):
     sp = get_spotify_client()
     results = sp.search(q=query, type="playlist", limit=50)
@@ -64,7 +72,7 @@ def search_playlists(query):
     return [
         {
             "id": playlist.get("id"),
-            "name": playlist.get("name", "Senza titolo"), 
+            "name": playlist.get("name", "Senza titolo"),
             "owner": playlist.get("owner", {}).get("display_name", "Sconosciuto"),
             "url": playlist.get("external_urls", {}).get("spotify", "#"),
             "image": playlist["images"][0]["url"] if playlist.get("images") else None
@@ -72,13 +80,11 @@ def search_playlists(query):
         for playlist in playlists if playlist
     ]
 
-
-
-
+# Recupera i brani di una playlist con dettagli
 def get_playlist_tracks(playlist_id):
     sp = get_spotify_client()
     try:
-        # Ottieni prima le informazioni della playlist
+        # Info generali della playlist
         playlist_info = sp.playlist(playlist_id)
         playlist_name = playlist_info.get('name', 'Senza titolo')
         playlist_owner = playlist_info.get('owner', {}).get('display_name', 'Sconosciuto')
@@ -88,14 +94,13 @@ def get_playlist_tracks(playlist_id):
 
         for track in results["items"]:
             track_info = track["track"]
-            if not track_info:  
+            if not track_info:
                 continue
 
-            # Estrai informazioni sugli artisti
+            # Estrai artisti e generi musicali
             artists = track_info["artists"]
             artist_ids = [artist["id"] for artist in artists]
             
-            # Estrai generi musicali
             genres = set()
             if artist_ids:
                 artists_info = sp.artists(artist_ids)["artists"]
@@ -103,20 +108,16 @@ def get_playlist_tracks(playlist_id):
                     genres.update(artist.get("genres", []))
 
             # Estrai copertina album
-            cover = None
-            if track_info["album"]["images"]:
-                cover = track_info["album"]["images"][0]["url"]
-            
-            # Calcola durata in formato mm:ss
+            cover = track_info["album"]["images"][0]["url"] if track_info["album"]["images"] else None
+
+            # Calcola durata in mm:ss
             duration_ms = track_info.get("duration_ms", 0)
-            duration_min = duration_ms // 60000
-            duration_sec = (duration_ms % 60000) // 1000
-            duration = f"{duration_min}:{duration_sec:02d}"
-            
-            # Estrai anno di pubblicazione
+            duration = f"{duration_ms // 60000}:{(duration_ms % 60000) // 1000:02d}"
+
+            # Anno di uscita
             release_year = track_info["album"].get("release_date", "Sconosciuto")[:4]
             
-            # Aggiungi tutte le informazioni al dizionario del brano
+            # Costruisci oggetto traccia
             tracks.append({
                 "playlist_name": playlist_name,
                 "playlist_owner": playlist_owner,
@@ -132,21 +133,19 @@ def get_playlist_tracks(playlist_id):
             })
 
         return tracks
+
     except Exception as e:
         logging.error(f"Errore durante il recupero dei brani della playlist: {e}")
         return []
 
-
-
-
+# Inizia il login OAuth su Spotify
 def spotify_login():
-    
     auth_manager = get_spotify_auth()
     auth_url = auth_manager.get_authorize_url()
     return redirect(auth_url)
 
+# Gestisce il callback dopo il login su Spotify
 def spotify_callback():
-    
     auth_manager = get_spotify_auth()
     code = request.args.get("code")
     if not code:
@@ -159,8 +158,8 @@ def spotify_callback():
     except Exception as e:
         return f"Errore durante il callback di Spotify: {e}", 500
 
+# Ottiene le playlist personali dell'utente loggato
 def get_user_playlists():
-    
     if 'token_info' not in session:
         logging.warning("Nessun token_info nella sessione.")
         return []
@@ -168,7 +167,6 @@ def get_user_playlists():
     sp = get_spotify_client()
     try:
         results = sp.current_user_playlists(limit=50)
-        logging.info("Risultati API Spotify: %s", results)
         playlists = [
             {
                 "id": playlist["id"],

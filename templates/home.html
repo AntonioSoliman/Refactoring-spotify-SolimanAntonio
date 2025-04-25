@@ -1,22 +1,30 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
+    <!-- Impostazione della codifica dei caratteri per supportare caratteri speciali -->
     <meta charset="UTF-8">
+    
+    <!-- Impostazione per la visualizzazione corretta su dispositivi mobili -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Titolo della pagina (Home - Spotify Analyzer) -->
     <title>Home - Spotify Analyzer</title>
+    
+    <!-- Collegamento al foglio di stile CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <!-- Barra di caricamento -->
+    <!-- Barra di caricamento (mostrata durante l'elaborazione) -->
     <div class="loader-container" id="loader">
         <div class="loader"></div>
         <p class="loader-text">Elaborazione in corso...</p>
     </div>
 
-
-        <h1>Benvenuto, {{ username }}</h1>
+    <!-- Benvenuto utente -->
+    <h1>Benvenuto, {{ username }}</h1>
 
     <main class="main-content">
+        <!-- Sezione di ricerca per cercare playlist pubbliche -->
         <section class="search-section">
             <form method="GET" action="{{ url_for('home.home') }}" class="search-form">
                 <input type="text" name="query" placeholder="Cerca playlist pubbliche" class="search-input">
@@ -24,8 +32,9 @@
             </form>
         </section>
 
+        <!-- Sezione dei pulsanti di navigazione e login/logout -->
         <section class="button-group">
-            <!-- Spotify Login/Logout -->
+            <!-- Login o Logout di Spotify -->
             {% if 'token_info' not in session %}
                 <button class="spotify-btn login" onclick="window.location.href='{{ url_for('spotify.spotify_login') }}'">
                     Collegati a Spotify
@@ -36,46 +45,55 @@
                 </button>
             {% endif %}
 
-            <!-- Navigation Buttons -->
+            <!-- Pulsante per accedere alle playlist salvate -->
             <button class="nav-btn" onclick="window.location.href='{{ url_for('spotify.saved_playlists') }}'">
                 Playlist Salvate
             </button>
 
+            <!-- Pulsante per accedere alle playlist private, visibile solo se l'utente è loggato -->
             {% if 'token_info' in session %}
                 <button class="nav-btn" onclick="window.location.href='{{ url_for('spotify.private_playlists') }}'">
                     Playlist Private
                 </button>
             {% endif %}
 
+            <!-- Pulsante per ricaricare le playlist -->
             <button class="nav-btn refresh" onclick="window.location.href='{{ url_for('home.home') }}'">
                 Ricarica Playlist
             </button>
 
+            <!-- Pulsante per fare logout -->
             <button class="logout-btn" onclick="window.location.href='{{ url_for('auth.logout') }}'">
                 Logout
             </button>
         </section>
 
+        <!-- Sezione per mostrare i risultati della ricerca delle playlist -->
         <section class="playlists-section">
             <h2>Risultati della Ricerca</h2>
             <ul class="playlist-list">
+                <!-- Ciclo per visualizzare tutte le playlist trovate nella ricerca -->
                 {% for playlist in playlists %}
                     <li class="playlist-item">
+                        <!-- Se c'è un'immagine di copertura, la mostriamo -->
                         {% if playlist.image %}
                         <img src="{{ playlist.image }}" alt="Copertina playlist {{ playlist.name }}" class="playlist-image">
                         {% endif %}
                         
                         <div class="playlist-info">
+                            <!-- Link per visualizzare la playlist -->
                             <a href="{{ url_for('spotify.playlist', playlist_id=playlist.id) }}" class="playlist-link">
                                 {{ playlist.name }} - {{ playlist.owner }}
                             </a>
                             
                             <div class="playlist-actions">
+                                <!-- Pulsante per selezionare la playlist -->
                                 <button class="action-btn select-btn" 
                                         onclick="togglePlaylistSelection('{{ playlist.id }}', '{{ playlist.name }}', '{{ playlist.owner }}', '{{ playlist.image }}')">
                                     Seleziona
                                 </button>
                                 
+                                <!-- Form per salvare la playlist -->
                                 <form method="POST" action="{{ url_for('spotify.save_playlist') }}" class="save-form">
                                     <input type="hidden" name="playlist_id" value="{{ playlist.id }}">
                                     <input type="hidden" name="playlist_name" value="{{ playlist.name }}">
@@ -90,14 +108,16 @@
             </ul>
         </section>
 
-        <!-- Comparison Section -->
+        <!-- Sezione di comparazione delle playlist, visibile solo se almeno 2 playlist sono selezionate -->
         <section id="comparison-section" class="comparison-section" style="display: none;">
             <h2>Playlist selezionate per il confronto</h2>
             <div id="selected-playlists" class="selected-playlists"></div>
             <div class="comparison-actions">
+                <!-- Pulsante per avviare il confronto -->
                 <button id="compare-button" class="compare-btn" onclick="comparePlaylists()" disabled>
                     Confronta Playlist
                 </button>
+                <!-- Pulsante per annullare la selezione -->
                 <button onclick="clearSelection()" class="cancel-btn">
                     Annulla selezione
                 </button>
@@ -106,14 +126,16 @@
     </main>
 
     <script>
-        // Gestione selezione playlist
+        // Gestione selezione playlist per il confronto
         let selectedPlaylists = [];
         const maxSelection = 2;
 
+        // Funzione per aggiungere o rimuovere una playlist dalla selezione
         function togglePlaylistSelection(playlistId, playlistName, playlistOwner, playlistImage) {
             const index = selectedPlaylists.findIndex(p => p.id === playlistId);
             const button = event.currentTarget;
             
+            // Se la playlist non è già selezionata e c'è spazio
             if (index === -1) {
                 if (selectedPlaylists.length >= maxSelection) {
                     alert(`Puoi selezionare al massimo ${maxSelection} playlist per il confronto.`);
@@ -131,14 +153,17 @@
                 button.classList.remove('selected');
             }
 
+            // Aggiornamento dell'interfaccia utente per riflettere la selezione
             updateSelectionUI();
         }
 
+        // Funzione per aggiornare l'interfaccia utente della selezione
         function updateSelectionUI() {
             const comparisonSection = document.getElementById('comparison-section');
             const selectedDiv = document.getElementById('selected-playlists');
             const compareButton = document.getElementById('compare-button');
             
+            // Se ci sono playlist selezionate, mostra la sezione di comparazione
             if (selectedPlaylists.length > 0) {
                 comparisonSection.style.display = 'block';
                 selectedDiv.innerHTML = selectedPlaylists.map(p => `
@@ -149,12 +174,14 @@
                     </div>
                 `).join('');
                 
+                // Abilita il pulsante per il confronto se sono selezionate due playlist
                 compareButton.disabled = selectedPlaylists.length !== 2;
             } else {
                 comparisonSection.style.display = 'none';
             }
         }
 
+        // Funzione per avviare il confronto delle playlist
         function comparePlaylists() {
             if (selectedPlaylists.length === 2) {
                 const loader = document.getElementById('loader');
@@ -172,6 +199,7 @@
             }
         }
 
+        // Funzione per annullare la selezione delle playlist
         function clearSelection() {
             selectedPlaylists = [];
             updateSelectionUI();

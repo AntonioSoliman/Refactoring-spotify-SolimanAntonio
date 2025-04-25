@@ -1,56 +1,71 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
+    <!-- Impostazioni di carattere e viewport per la compatibilità con dispositivi mobili -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Titolo della pagina che appare nella scheda del browser -->
     <title>Playlist Pubbliche Salvate</title>
+
+    <!-- Collegamento al foglio di stile CSS per la pagina -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- Collegamento alla libreria di icone Font Awesome per usare icone come il carrello e altre -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <!-- Barra di caricamento -->
+    <!-- Barra di caricamento che viene mostrata durante il confronto delle playlist -->
     <div class="loader-container" id="loader">
         <div class="loader-spinner"></div>
         <p class="loader-text">Preparazione del confronto...</p>
     </div>
 
-        <div class="header-content">
-            <h1><i class="fas fa-music"></i> Playlist Pubbliche Salvate</h1>
-            <a href="{{ url_for('home.home') }}" class="home-link">
-                <i class="fas fa-home"></i> Torna alla Home
-            </a>
-        </div>
+    <!-- Sezione dell'intestazione con titolo e link per tornare alla home -->
+    <div class="header-content">
+        <h1><i class="fas fa-music"></i> Playlist Pubbliche Salvate</h1>
+        <a href="{{ url_for('home.home') }}" class="home-link">
+            <i class="fas fa-home"></i> Torna alla Home
+        </a>
+    </div>
 
+    <!-- Contenuto principale che mostra le playlist salvate -->
     <main class="saved-container">
         {% if playlists %}
         <ul class="saved-list">
+            <!-- Ciclo per mostrare tutte le playlist salvate -->
             {% for playlist in playlists %}
-                <li class="saved-item">
-                    <div class="playlist-card">
-                        {% if playlist.image %}
-                        <img src="{{ playlist.image }}" alt="Copertina {{ playlist.name }}" class="playlist-cover">
-                        {% else %}
-                        <div class="cover-placeholder"><i class="fas fa-music"></i></div>
-                        {% endif %}
+            <li class="saved-item">
+                <div class="playlist-card">
+                    <!-- Se la playlist ha un'immagine, viene mostrata -->
+                    {% if playlist.image %}
+                    <img src="{{ playlist.image }}" alt="Copertina {{ playlist.name }}" class="playlist-cover">
+                    {% else %}
+                    <!-- Se non c'è immagine, viene mostrato un placeholder -->
+                    <div class="cover-placeholder"><i class="fas fa-music"></i></div>
+                    {% endif %}
+                    
+                    <!-- Dettagli della playlist: nome, proprietario e bottone di selezione -->
+                    <div class="playlist-info">
+                        <h3>
+                            <a href="{{ url_for('spotify.playlist', playlist_id=playlist.id) }}" class="playlist-link">
+                                {{ playlist.name }}
+                            </a>
+                        </h3>
+                        <p class="playlist-owner">{{ playlist.owner }}</p>
                         
-                        <div class="playlist-info">
-                            <h3>
-                                <a href="{{ url_for('spotify.playlist', playlist_id=playlist.id) }}" class="playlist-link">
-                                    {{ playlist.name }}
-                                </a>
-                            </h3>
-                            <p class="playlist-owner">{{ playlist.owner }}</p>
-                            
-                            <button class="select-btn" onclick="toggleSelection(this, '{{ playlist.id }}', '{{ playlist.name }}', '{{ playlist.owner }}', '{{ playlist.image }}')">
-                                <i class="far fa-square check-icon"></i>
-                                <span>Seleziona</span>
-                            </button>
-                        </div>
+                        <!-- Bottone per selezionare la playlist per il confronto -->
+                        <button class="select-btn" onclick="toggleSelection(this, '{{ playlist.id }}', '{{ playlist.name }}', '{{ playlist.owner }}', '{{ playlist.image }}')">
+                            <i class="far fa-square check-icon"></i>
+                            <span>Seleziona</span>
+                        </button>
                     </div>
-                </li>
+                </div>
+            </li>
             {% endfor %}
         </ul>
         {% else %}
+        <!-- Se non ci sono playlist salvate, viene mostrato un messaggio di stato vuoto -->
         <div class="empty-state">
             <i class="fas fa-inbox"></i>
             <p>Nessuna playlist salvata.</p>
@@ -61,53 +76,61 @@
         {% endif %}
     </main>
 
-    <!-- Pannello di confronto -->
+    <!-- Pannello per il confronto delle playlist selezionate -->
     <div id="comparison-panel" class="comparison-panel">
         <div class="panel-header">
             <h2><i class="fas fa-exchange-alt"></i> Confronto playlist</h2>
             <div class="panel-actions">
+                <!-- Bottone per avviare il confronto, disabilitato fino a quando non vengono selezionate due playlist -->
                 <button id="compare-btn" class="compare-btn" disabled>
                     <i class="fas fa-chart-bar"></i> Confronta
                 </button>
+                <!-- Bottone per cancellare la selezione -->
                 <button class="clear-btn" onclick="clearSelection()">
                     <i class="fas fa-times"></i> Annulla
                 </button>
             </div>
         </div>
         
+        <!-- Area che mostra le playlist selezionate per il confronto -->
         <div id="selected-playlists" class="selected-container"></div>
     </div>
 
     <script>
-        // Stato globale
+        // Stato globale per tenere traccia delle playlist selezionate e il limite massimo di selezioni
         const state = {
             selectedPlaylists: [],
             maxSelection: 2
         };
 
-        // Toggle selezione playlist
+        // Funzione per gestire il toggle della selezione delle playlist
         function toggleSelection(button, id, name, owner, image) {
+            // Verifica se la playlist è già stata selezionata
             const index = state.selectedPlaylists.findIndex(p => p.id === id);
             
             if (index === -1) {
+                // Se non è selezionata e il numero massimo di selezioni non è stato raggiunto
                 if (state.selectedPlaylists.length >= state.maxSelection) {
                     showAlert(`Puoi selezionare al massimo ${state.maxSelection} playlist`);
                     return;
                 }
                 
+                // Aggiungi la playlist selezionata allo stato
                 state.selectedPlaylists.push({ id, name, owner, image });
                 button.innerHTML = '<i class="fas fa-check-square check-icon"></i><span>Selezionata</span>';
                 button.classList.add('selected');
             } else {
+                // Se la playlist è già selezionata, la rimuovi
                 state.selectedPlaylists.splice(index, 1);
                 button.innerHTML = '<i class="far fa-square check-icon"></i><span>Seleziona</span>';
                 button.classList.remove('selected');
             }
             
+            // Aggiorna il pannello di confronto
             updateComparisonPanel();
         }
 
-        // Aggiorna il pannello di confronto
+        // Funzione per aggiornare il pannello di confronto
         function updateComparisonPanel() {
             const panel = document.getElementById('comparison-panel');
             const container = document.getElementById('selected-playlists');
@@ -128,6 +151,7 @@
                     </div>
                 `).join('');
                 
+                // Abilita/disabilita il pulsante di confronto in base al numero di playlist selezionate
                 compareBtn.disabled = state.selectedPlaylists.length !== state.maxSelection;
                 compareBtn.innerHTML = state.selectedPlaylists.length === state.maxSelection ? 
                     `<i class="fas fa-chart-bar"></i> Confronta (${state.selectedPlaylists.length}/${state.maxSelection})` :
@@ -137,18 +161,19 @@
             }
         }
 
-        // Avvia confronto
+        // Funzione per avviare il confronto
         function comparePlaylists() {
             if (state.selectedPlaylists.length === state.maxSelection) {
                 showLoader();
                 
+                // Ritardo prima di navigare per simulare il processo di confronto
                 setTimeout(() => {
                     window.location.href = `/compare/${state.selectedPlaylists[0].id}/${state.selectedPlaylists[1].id}`;
                 }, 300);
             }
         }
 
-        // Resetta selezione
+        // Funzione per resettare la selezione delle playlist
         function clearSelection() {
             state.selectedPlaylists = [];
             document.querySelectorAll('.select-btn').forEach(btn => {
@@ -158,7 +183,7 @@
             updateComparisonPanel();
         }
 
-        // Mostra loader
+        // Funzione per mostrare la barra di caricamento durante l'elaborazione del confronto
         function showLoader() {
             const loader = document.getElementById('loader');
             const compareBtn = document.getElementById('compare-btn');
@@ -168,12 +193,12 @@
             compareBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Elaborazione...';
         }
 
-        // Mostra alert
+        // Funzione per mostrare un alert personalizzato
         function showAlert(message) {
-            alert(message); // Sostituire con un modal più elegante se necessario
+            alert(message); // Si potrebbe sostituire con un modal per un'UI più elegante
         }
 
-        // Inizializzazione
+        // Inizializzazione dei listener degli eventi dopo il caricamento del documento
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('compare-btn').addEventListener('click', comparePlaylists);
         });
