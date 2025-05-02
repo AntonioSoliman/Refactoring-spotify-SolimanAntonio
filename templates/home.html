@@ -1,30 +1,24 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <!-- Impostazione della codifica dei caratteri per supportare caratteri speciali -->
     <meta charset="UTF-8">
-    
-    <!-- Impostazione per la visualizzazione corretta su dispositivi mobili -->
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- Titolo della pagina (Home - Spotify Analyzer) -->
+
     <title>Home - Spotify Analyzer</title>
-    
-    <!-- Collegamento al foglio di stile CSS -->
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
 </head>
 <body>
-    <!-- Barra di caricamento (mostrata durante l'elaborazione) -->
     <div class="loader-container" id="loader">
         <div class="loader"></div>
-        <p class="loader-text">Elaborazione in corso...</p>
+        <p class="loader-text">Caricamento In Corso...</p>
     </div>
 
-    <!-- Benvenuto utente -->
     <h1>Benvenuto, {{ username }}</h1>
 
     <main class="main-content">
-        <!-- Sezione di ricerca per cercare playlist pubbliche -->
         <section class="search-section">
             <form method="GET" action="{{ url_for('home.home') }}" class="search-form">
                 <input type="text" name="query" placeholder="Cerca playlist pubbliche" class="search-input">
@@ -32,9 +26,7 @@
             </form>
         </section>
 
-        <!-- Sezione dei pulsanti di navigazione e login/logout -->
         <section class="button-group">
-            <!-- Login o Logout di Spotify -->
             {% if 'token_info' not in session %}
                 <button class="spotify-btn login" onclick="window.location.href='{{ url_for('spotify.spotify_login') }}'">
                     Collegati a Spotify
@@ -45,55 +37,50 @@
                 </button>
             {% endif %}
 
-            <!-- Pulsante per accedere alle playlist salvate -->
             <button class="nav-btn" onclick="window.location.href='{{ url_for('spotify.saved_playlists') }}'">
                 Vai Alle Tue Playlist Salvate
             </button>
 
-            <!-- Pulsante per accedere alle playlist private, visibile solo se l'utente è loggato -->
             {% if 'token_info' in session %}
                 <button class="nav-btn" onclick="window.location.href='{{ url_for('spotify.private_playlists') }}'">
                     Vai Alle Playlist Private Di Spotify
                 </button>
             {% endif %}
 
-            <!-- Pulsante per ricaricare le playlist -->
             <button class="nav-btn refresh" onclick="window.location.href='{{ url_for('home.home') }}'">
                 Ricarica Playlist Casuali
             </button>
 
-            <!-- Pulsante per fare logout -->
             <button class="logout-btn" onclick="window.location.href='{{ url_for('auth.logout') }}'">
                 Logout
             </button>
         </section>
 
-        <!-- Sezione per mostrare i risultati della ricerca delle playlist -->
         <section class="playlists-section">
             <h2>Risultati della Ricerca</h2>
             <ul class="playlist-list">
-                <!-- Ciclo per visualizzare tutte le playlist trovate nella ricerca -->
                 {% for playlist in playlists %}
                     <li class="playlist-item">
-                        <!-- Se c'è un'immagine di copertura, la mostriamo -->
                         {% if playlist.image %}
                         <img src="{{ playlist.image }}" alt="Copertina playlist {{ playlist.name }}" class="playlist-image">
                         {% endif %}
-                        
+
                         <div class="playlist-info">
-                            <!-- Link per visualizzare la playlist -->
-                            <a href="{{ url_for('spotify.playlist', playlist_id=playlist.id) }}" class="playlist-link">
-                                {{ playlist.name }} - {{ playlist.owner }}
-                            </a>
-                            
+                            <div class="playlist-link-container">
+                                <a href="{{ url_for('spotify.playlist', playlist_id=playlist.id) }}"
+                                   class="playlist-link"
+                                   data-playlist-url="{{ url_for('spotify.playlist', playlist_id=playlist.id) }}">
+                                    {{ playlist.name }} - {{ playlist.owner }}
+                                </a>
+                                <div class="playlist-loader" id="loader-{{ playlist.id }}"></div>
+                            </div>
+
                             <div class="playlist-actions">
-                                <!-- Pulsante per selezionare la playlist -->
-                                <button class="action-btn select-btn" 
+                                <button class="action-btn select-btn"
                                         onclick="togglePlaylistSelection('{{ playlist.id }}', '{{ playlist.name }}', '{{ playlist.owner }}', '{{ playlist.image }}')">
-                                    Seleziona
+                                    Seleziona il playlist
                                 </button>
-                                
-                                <!-- Form per salvare la playlist -->
+
                                 <form method="POST" action="{{ url_for('spotify.save_playlist') }}" class="save-form">
                                     <input type="hidden" name="playlist_id" value="{{ playlist.id }}">
                                     <input type="hidden" name="playlist_name" value="{{ playlist.name }}">
@@ -108,17 +95,14 @@
             </ul>
         </section>
 
-        <!-- Sezione di comparazione delle playlist, visibile solo se almeno 2 playlist sono selezionate -->
         <section id="comparison-section" class="comparison-section" style="display: none;">
             <h2>Playlist selezionate per il confronto</h2>
             <div id="selected-playlists" class="selected-playlists"></div>
             <div class="comparison-actions">
-                <!-- Pulsante per avviare il confronto -->
                 <button id="compare-button" class="compare-btn" onclick="comparePlaylists()" disabled>
                     Confronta Playlist
                 </button>
-                <!-- Pulsante per annullare la selezione -->
-                <button onclick="clearSelection()" class="cancel-btn">
+                <button onclick="confirmClearSelection()" class="cancel-btn">
                     Annulla selezione
                 </button>
             </div>
@@ -126,6 +110,21 @@
     </main>
 
     <script>
+        // Ottieni l'elemento del loader principale
+        const loader = document.getElementById('loader');
+
+        // Aggiungi un event listener a tutti i link delle playlist per mostrare il loader principale
+        document.querySelectorAll('.playlist-link').forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                loader.style.display = 'flex';
+                const playlistUrl = this.getAttribute('data-playlist-url');
+                setTimeout(() => {
+                    window.location.href = playlistUrl;
+                }, 150);
+            });
+        });
+
         // Gestione selezione playlist per il confronto
         let selectedPlaylists = [];
         const maxSelection = 2;
@@ -134,7 +133,7 @@
         function togglePlaylistSelection(playlistId, playlistName, playlistOwner, playlistImage) {
             const index = selectedPlaylists.findIndex(p => p.id === playlistId);
             const button = event.currentTarget;
-            
+
             // Se la playlist non è già selezionata e c'è spazio
             if (index === -1) {
                 if (selectedPlaylists.length >= maxSelection) {
@@ -148,9 +147,13 @@
                     image: playlistImage
                 });
                 button.classList.add('selected');
+                button.textContent = 'Annulla selezione'; // Cambia il testo del bottone
+                alert(`È stata selezionata la playlist "${playlistName}" per il confronto.`); // Mostra l'avviso di selezione
             } else {
                 selectedPlaylists.splice(index, 1);
                 button.classList.remove('selected');
+                button.textContent = 'Seleziona il playlist'; // Ripristina il testo del bottone
+                alert(`La selezione per la playlist "${playlistName}" è stata annullata.`); // Mostra l'avviso di annullamento
             }
 
             // Aggiornamento dell'interfaccia utente per riflettere la selezione
@@ -162,7 +165,7 @@
             const comparisonSection = document.getElementById('comparison-section');
             const selectedDiv = document.getElementById('selected-playlists');
             const compareButton = document.getElementById('compare-button');
-            
+
             // Se ci sono playlist selezionate, mostra la sezione di comparazione
             if (selectedPlaylists.length > 0) {
                 comparisonSection.style.display = 'block';
@@ -173,29 +176,45 @@
                         <span class="selected-owner">${p.owner}</span>
                     </div>
                 `).join('');
-                
+
                 // Abilita il pulsante per il confronto se sono selezionate due playlist
                 compareButton.disabled = selectedPlaylists.length !== 2;
             } else {
                 comparisonSection.style.display = 'none';
+                // Resetta il testo di tutti i bottoni a "Seleziona" quando la selezione viene annullata completamente
+                document.querySelectorAll('.select-btn').forEach(btn => {
+                    btn.textContent = 'Seleziona il playlist';
+                    btn.classList.remove('selected');
+                });
             }
         }
 
         // Funzione per avviare il confronto delle playlist
         function comparePlaylists() {
             if (selectedPlaylists.length === 2) {
-                const loader = document.getElementById('loader');
+                loader.style.display = 'flex'; // Mostra il loader
                 const compareButton = document.getElementById('compare-button');
-                
-                // Mostra loader e disabilita pulsante
-                loader.style.display = 'flex';
+
+                // Disabilita il pulsante e aggiorna il testo
                 compareButton.disabled = true;
                 compareButton.textContent = 'Elaborazione...';
-                
+
                 // Reindirizza dopo breve ritardo
                 setTimeout(() => {
                     window.location.href = `/compare/${selectedPlaylists[0].id}/${selectedPlaylists[1].id}`;
                 }, 150);
+            }
+        }
+
+        // Funzione per chiedere conferma prima di annullare la selezione
+        function confirmClearSelection() {
+            if (selectedPlaylists.length > 0) {
+                const confirmation = confirm("Sei sicuro di voler annullare la selezione delle playlist per il confronto?");
+                if (confirmation) {
+                    clearSelection();
+                }
+            } else {
+                alert("Non ci sono playlist selezionate da annullare.");
             }
         }
 
@@ -205,6 +224,7 @@
             updateSelectionUI();
             document.querySelectorAll('.select-btn.selected').forEach(btn => {
                 btn.classList.remove('selected');
+                btn.textContent = 'Seleziona il playlist'; // Resetta il testo anche qui
             });
         }
     </script>

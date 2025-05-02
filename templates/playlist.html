@@ -1,76 +1,79 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <!-- Definizione della codifica del carattere e viewport per una visualizzazione corretta sui dispositivi mobili -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- Titolo della pagina che appare sulla scheda del browser -->
+
     <title>Brani della Playlist</title>
 
-    <!-- Collegamento al foglio di stile CSS per la pagina -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
-    <!-- Inclusione della libreria Plotly per la generazione dei grafici -->
     <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
 </head>
 <body>
-    <!-- Intestazione della pagina con il titolo principale -->
     <h1>Brani della Playlist</h1>
 
-    <!-- Se c'è un errore (ad esempio, se non sono disponibili brani), mostra un messaggio di errore -->
     {% if error %}
         <p style="color: red;">{{ error }}</p>
     {% else %}
-    
-    <!-- Se non ci sono errori, mostra la lista dei brani -->
+
     <ul>
-        <!-- Link per tornare alla home -->
         <a href="{{ url_for('home.home') }}" class="button">Torna alla Home</a>
 
-        <!-- Link per visualizzare i grafici relativi alla playlist -->
-        <a href="{{ url_for('home.analisi', playlist_id=playlist_id) }}" class="button">Mostra i Grafici</a>
-    
-        <!-- Ciclo attraverso i brani nella playlist -->
+        <a href="{{ url_for('spotify.saved_playlists') }}" class="button" onclick="showLoader()">Torna alle Playlist Salvate</a>
+
+        <a href="{{ url_for('home.analisi', playlist_id=playlist_id) }}" class="button" onclick="showLoader()">Mostra i Grafici</a>
+
         {% for track in tracks %}
             <li>
-                <!-- Nome del brano e altre informazioni come l'artista, l'album e l'anno di uscita -->
                 <strong>{{ track.name }}</strong> - {{ track.artist }} ({{ track.album }}, {{ track.release_year }})
                 - Durata: {{ track.duration }}
 
-                <!-- Se esiste una copertura del brano, mostra l'immagine della copertina -->
                 {% if track.cover %}
                     <img src="{{ track.cover }}" width="50" alt="Copertina album">
                 {% endif %}
-                
-                <!-- Link per ascoltare il brano su Spotify -->
+
                 <a href="{{ track.track_url }}" target="_blank" class="button">Ascolta su Spotify</a>
             </li>
         {% endfor %}
     </ul>
     {% endif %}
 
-    <!-- Div per il loader (spinner), che verrà mostrato durante l'elaborazione -->
     <div class="loader-container" id="loader">
         <div class="loader"></div>
     </div>
 
     <script>
-        // Aggiungi un ascoltatore di eventi al link che mostra i grafici
-        document.querySelector('a[href*="analisi"]').addEventListener('click', function(e) {
-            // Prevenire il comportamento predefinito del link (navigazione immediata)
-            e.preventDefault();
-            
-            // Mostra il loader (spinner)
+        function showLoader() {
             const loader = document.getElementById('loader');
             loader.style.display = 'flex';
-            
-            // Simula un ritardo (opzionale, per testare la visualizzazione del loader)
-            setTimeout(() => {
-                // Reindirizza alla pagina di analisi dopo il ritardo
-                window.location.href = this.href;
-            }, 100);
-        });
+        }
+
+        // Nascondi il loader quando la pagina è completamente caricata
+        window.onload = function() {
+            const loader = document.getElementById('loader');
+            loader.style.display = 'none';
+        };
+
+        // Mostra il loader quando si clicca sul link per tornare alla pagina delle playlist salvate
+        const backToSavedPlaylistsLink = document.querySelector('a[href*="{{ url_for(\'spotify.saved_playlists\') }}"]');
+        if (backToSavedPlaylistsLink) {
+            backToSavedPlaylistsLink.addEventListener('click', function(e) {
+                showLoader();
+            });
+        }
+
+        // Aggiungi un ascoltatore di eventi al link che mostra i grafici
+        const showChartsLink = document.querySelector('a[href*="analisi"]');
+        if (showChartsLink) {
+            showChartsLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                showLoader();
+                setTimeout(() => {
+                    window.location.href = this.href;
+                }, 100);
+            });
+        }
     </script>
 </body>
 </html>

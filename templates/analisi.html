@@ -1,80 +1,68 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="it">
 <head>
-    <!-- Impostazioni base della pagina -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- Titolo della pagina -->
+
     <title>Analisi Playlist</title>
 
-    <!-- Collegamento al foglio di stile CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
-    <!-- Inclusione libreria Plotly per i grafici -->
     <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
 </head>
 <body>
 
-    <!-- Pulsanti per tornare alla home o alla pagina della playlist -->
     <a href="{{ url_for('home.home') }}" class="button">Torna alla Home</a>
-    <a href="{{ url_for('home.playlist', playlist_id=playlist_id) }}" class="button">Torna alla Playlist</a>
+    <a href="{{ url_for('spotify.playlist', playlist_id=playlist_id) }}" class="button" onclick="showLoader()">Torna alla Playlist</a>
 
-    <!-- Titolo principale della pagina -->
     <h1>Analisi della Playlist</h1>
 
-    <!-- Se ci sono grafici disponibili, visualizzali -->
     {% if charts %}
         <div class="charts">
-            <!-- Sezione: Top 5 Artisti -->
             <h2>Top 5 Artisti</h2>
             <div id="fig_artists">{{ charts.fig_artists|safe }}</div>
 
-            <!-- Sezione: Top 5 Album -->
             <h2>Top 5 Album</h2>
             <div id="fig_albums">{{ charts.fig_albums|safe }}</div>
 
-            <!-- Sezione: Distribuzione generi musicali -->
             <h2>Distribuzione dei Generi Musicali</h2>
             <div id="fig_genres">{{ charts.fig_genres|safe }}</div>
 
-            <!-- Sezione: Distribuzione degli anni di uscita -->
             <h2>Distribuzione Temporale dei Brani</h2>
             <div id="fig_release_year">{{ charts.fig_release_year|safe }}</div>
 
-            <!-- Sezione: Durata dei brani -->
             <h2>Distribuzione della Durata dei Brani</h2>
             <div id="fig_duration">{{ charts.fig_duration|safe }}</div>
 
-            <!-- Sezione: Popolarità -->
             <h2>Distribuzione della Popolarità</h2>
             <div id="fig_popularity">{{ charts.fig_popularity|safe }}</div>
 
-            <!-- Sezione: Evoluzione della popolarità nel tempo -->
             <h2>Evoluzione della Popolarità nel Tempo</h2>
             <div id="fig_evolution">{{ charts.fig_evolution|safe }}</div>
         </div>
     {% else %}
-        <!-- Messaggio mostrato se non ci sono grafici -->
         <p>Nessun grafico disponibile per questa playlist.</p>
     {% endif %}
 
-    <!-- Loader (animazione di caricamento) -->
     <div class="loader-container" id="loader">
         <div class="loader"></div>
     </div>
 
-    <!-- Script JavaScript per mostrare il loader durante il caricamento -->
     <script>
-        document.querySelector('a[href*="analisi"]').addEventListener('click', function(e) {
-            e.preventDefault(); // Previene il comportamento di default del link
+        function showLoader() {
             const loader = document.getElementById('loader');
-            loader.style.display = 'flex'; // Mostra il loader
-            
-            // Simula un piccolo ritardo prima di caricare la pagina (opzionale)
-            setTimeout(() => {
-                window.location.href = this.href;
-            }, 100);
+            loader.style.display = 'flex';
+        }
+
+        // Nascondi il loader quando la pagina è completamente caricata
+        window.onload = function() {
+            const loader = document.getElementById('loader');
+            loader.style.display = 'none';
+        };
+
+        // Mostra il loader quando si clicca sul link per tornare alla playlist
+        document.querySelector('a[href*="{{ url_for(\'spotify.playlist\', playlist_id=playlist_id) }}"]').addEventListener('click', function(e) {
+            showLoader();
         });
     </script>
 </body>
