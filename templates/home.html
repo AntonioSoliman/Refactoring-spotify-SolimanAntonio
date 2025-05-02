@@ -41,25 +41,25 @@
                 </button>
             {% else %}
                 <button class="spotify-btn logout" onclick="window.location.href='{{ url_for('spotify.spotify_logout') }}'">
-                    Logout Spotify
+                    Logout Di Spotify
                 </button>
             {% endif %}
 
             <!-- Pulsante per accedere alle playlist salvate -->
             <button class="nav-btn" onclick="window.location.href='{{ url_for('spotify.saved_playlists') }}'">
-                Playlist Salvate
+                Vai Alle Tue Playlist Salvate
             </button>
 
             <!-- Pulsante per accedere alle playlist private, visibile solo se l'utente è loggato -->
             {% if 'token_info' in session %}
                 <button class="nav-btn" onclick="window.location.href='{{ url_for('spotify.private_playlists') }}'">
-                    Playlist Private
+                    Vai Alle Playlist Private Di Spotify
                 </button>
             {% endif %}
 
             <!-- Pulsante per ricaricare le playlist -->
             <button class="nav-btn refresh" onclick="window.location.href='{{ url_for('home.home') }}'">
-                Ricarica Playlist
+                Ricarica Playlist Casuali
             </button>
 
             <!-- Pulsante per fare logout -->
