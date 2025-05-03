@@ -18,7 +18,7 @@
     {% else %}
 
     <ul>
-        <a href="{{ url_for('home.home') }}" class="button">Torna alla Home</a>
+        <a href="{{ url_for('home.home') }}" class="button" onclick="showLoader()">Torna alla Home</a>
 
         <a href="{{ url_for('spotify.saved_playlists') }}" class="button" onclick="showLoader()">Torna alle Playlist Salvate</a>
 
@@ -33,7 +33,7 @@
                     <img src="{{ track.cover }}" width="50" alt="Copertina album">
                 {% endif %}
 
-                <a href="{{ track.track_url }}" target="_blank" class="button">Ascolta su Spotify</a>
+                <a href="{{ track.track_url }}" target="_blank" class="button" onclick="showLoader()">Ascolta su Spotify</a>
             </li>
         {% endfor %}
     </ul>
@@ -55,25 +55,21 @@
             loader.style.display = 'none';
         };
 
-        // Mostra il loader quando si clicca sul link per tornare alla pagina delle playlist salvate
-        const backToSavedPlaylistsLink = document.querySelector('a[href*="{{ url_for(\'spotify.saved_playlists\') }}"]');
-        if (backToSavedPlaylistsLink) {
-            backToSavedPlaylistsLink.addEventListener('click', function(e) {
+        // Mostra il loader quando si clicca su qualsiasi link
+        document.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', function(e) {
                 showLoader();
+                // Se il link non ha un target="_blank", previeni il comportamento predefinito
+                // e simula un piccolo ritardo per mostrare il loader
+                if (!this.getAttribute('target')) {
+                    e.preventDefault();
+                    const href = this.getAttribute('href');
+                    setTimeout(() => {
+                        window.location.href = href;
+                    }, 100);
+                }
             });
-        }
-
-        // Aggiungi un ascoltatore di eventi al link che mostra i grafici
-        const showChartsLink = document.querySelector('a[href*="analisi"]');
-        if (showChartsLink) {
-            showChartsLink.addEventListener('click', function(e) {
-                e.preventDefault();
-                showLoader();
-                setTimeout(() => {
-                    window.location.href = this.href;
-                }, 100);
-            });
-        }
+        });
     </script>
 </body>
 </html>

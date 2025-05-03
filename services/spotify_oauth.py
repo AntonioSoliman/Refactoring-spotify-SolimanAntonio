@@ -5,9 +5,9 @@ from flask import session, redirect, url_for, request, render_template
 import random
 import logging
 
-SPOTIFY_CLIENT_ID = "d74cb805ae4f4e9c87c5d361d8adade3"
-SPOTIFY_CLIENT_SECRET = "3a61d65da5914d1789080bccbc68e0fd"
-SPOTIFY_REDIRECT_URI = "https://super-engine-pjrq5q4674prf7r99-5000.app.github.dev/callback"
+SPOTIFY_CLIENT_ID = "ef05fc98d68d46298e93a2da2b717946"
+SPOTIFY_CLIENT_SECRET = "15e5ce3c623e41b09b85c37d125d2021"
+SPOTIFY_REDIRECT_URI = "https://redesigned-halibut-4jj747wpjjx9fw7-5000.app.github.dev/callback"
 SCOPE = "user-read-private playlist-read-private playlist-read-collaborative"
 
 # Setup logging

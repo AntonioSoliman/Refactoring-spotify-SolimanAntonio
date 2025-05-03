@@ -12,7 +12,7 @@
 </head>
 <body>
 
-    <a href="{{ url_for('home.home') }}" class="button">Torna alla Home</a>
+    <a href="{{ url_for('home.home') }}" class="button" onclick="showLoader()">Torna alla Home</a>
     <a href="{{ url_for('spotify.playlist', playlist_id=playlist_id) }}" class="button" onclick="showLoader()">Torna alla Playlist</a>
 
     <h1>Analisi della Playlist</h1>
@@ -61,9 +61,13 @@
         };
 
         // Mostra il loader quando si clicca sul link per tornare alla playlist
-        document.querySelector('a[href*="{{ url_for(\'spotify.playlist\', playlist_id=playlist_id) }}"]').addEventListener('click', function(e) {
-            showLoader();
-        });
+        const playlistUrl = "{{ url_for('spotify.playlist', playlist_id=playlist_id) }}";
+        const backToPlaylistLink = document.querySelector('a[href*="' + playlistUrl + '"]');
+        if (backToPlaylistLink) {
+            backToPlaylistLink.addEventListener('click', function(e) {
+                showLoader();
+            });
+        }
     </script>
 </body>
 </html>
