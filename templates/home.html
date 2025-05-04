@@ -17,7 +17,9 @@
     </div>
 
     <h1>Benvenuto, {{ username }}</h1>
-
+    <button class="logout-btn" onclick="confirmLogout('{{ url_for('auth.logout') }}')">
+        Logout
+    </button>
     <main class="main-content">
         <section class="search-section">
             <form method="GET" action="{{ url_for('home.home') }}" class="search-form">
@@ -32,9 +34,9 @@
                     Collegati a Spotify
                 </button>
             {% else %}
-                <button class="spotify-btn logout" onclick="window.location.href='{{ url_for('spotify.spotify_logout') }}'">
-                    Logout Di Spotify
-                </button>
+            <button class="spotify-btn logout" onclick="confirmSpotifyLogout('{{ url_for('spotify.spotify_logout') }}')">
+                Logout Di Spotify
+            </button>
             {% endif %}
 
             <button class="nav-btn" onclick="window.location.href='{{ url_for('spotify.saved_playlists') }}'">
@@ -51,9 +53,7 @@
                 Ricarica Playlist Casuali
             </button>
 
-            <button class="logout-btn" onclick="window.location.href='{{ url_for('auth.logout') }}'">
-                Logout
-            </button>
+         
         </section>
 
         <section class="playlists-section">
@@ -110,6 +110,22 @@
     </main>
 
     <script>
+
+    function confirmLogout(logoutUrl) {
+            const conferma = confirm("Sei sicuro di voler uscire?");
+            if (conferma) {
+                window.location.href = logoutUrl;
+            }
+        }
+
+        // Conferma logout da Spotify
+        function confirmSpotifyLogout(logoutUrl) {
+            const conferma = confirm("Sei sicuro di voler disconnetterti da Spotify?");
+            if (conferma) {
+                window.location.href = logoutUrl;
+            }
+        }
+
         // Ottieni l'elemento del loader principale
         const loader = document.getElementById('loader');
 

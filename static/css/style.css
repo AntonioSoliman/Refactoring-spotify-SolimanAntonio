@@ -380,3 +380,36 @@ button:hover::after, .button:hover::after {
     display: flex;
     gap: 15px;
 }
+.delete-btn {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.delete-btn:hover {
+    background-color: #c0392b;
+}
+
+.logout-btn {
+    position: fixed; /* fissato allo schermo */
+    top: 20px;
+    right: 20px;
+    background-color: #e74c3c;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease;
+    z-index: 9999; /* importante per evitare che altri elementi lo coprano */
+    visibility: visible; /* evita ritardi di rendering */
+}
+.logout-btn:hover {
+    background-color: #c0392b;
+}

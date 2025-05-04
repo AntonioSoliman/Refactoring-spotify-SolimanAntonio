@@ -50,7 +50,24 @@ def saved_playlists():
             db.session.commit()
 
     return render_template('saved_playlists.html', playlists=public_playlists)
+@spotify_bp.route('/delete_playlist', methods=['POST'])
+@login_required
+def delete_playlist():
+    # Recupera l'ID della playlist dal form
+    playlist_id = request.form.get('playlist_id')
 
+    # Trova l'associazione tra l'utente e la playlist
+    user_playlist = UserPlaylist.query.filter_by(user_id=current_user.id, playlist_id=playlist_id).first()
+
+    if user_playlist:
+        # Rimuove l'associazione dal database
+        db.session.delete(user_playlist)
+        db.session.commit()
+        flash('Playlist eliminata con successo!', 'success')
+    else:
+        flash('Non è stato possibile trovare la playlist da eliminare.', 'danger')
+
+    return redirect(url_for('spotify.saved_playlists'))
 @spotify_bp.route('/private_playlists')
 @login_required
 def private_playlists():

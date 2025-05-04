@@ -48,6 +48,12 @@
                             <i class="far fa-square check-icon"></i>
                             <span>Seleziona</span>
                         </button>
+                        <form action="{{ url_for('spotify.delete_playlist') }}" method="POST" class="delete-form" onsubmit="return confirmDelete('{{ playlist.name }}')">
+                            <input type="hidden" name="playlist_id" value="{{ playlist.id }}">
+                            <button type="submit" class="delete-btn">
+                                <i class="fas fa-trash"></i> Elimina
+                            </button>
+                        </form>
                     </div>
                 </div>
             </li>
@@ -183,7 +189,9 @@
         function showAlert(message) {
             alert(message); // Si potrebbe sostituire con un modal per un'UI più elegante
         }
-
+        function confirmDelete(playlistName) {
+            return confirm(`Sei sicuro di voler eliminare la playlist "${playlistName}"?`);
+        }
         // Inizializzazione dei listener degli eventi dopo il caricamento del documento
         document.addEventListener('DOMContentLoaded', () => {
             // Listener per il bottone di confronto (già presente)
